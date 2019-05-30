@@ -1,0 +1,4 @@
+30/05/2019
+This project still lacks some documentation, also not all features are yet implemented.
+
+To run the code, open the makefile, include the pathways to the required libraries as indicated (install them first, of course, if necessary) and then just run 'make'.
