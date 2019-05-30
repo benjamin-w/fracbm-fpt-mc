@@ -1,3 +1,12 @@
+/* This code simulates a fractional Brownian Motion on the interval [0,1] and finds the first passage time.
+ * 
+ * Authors: Benjamin Walter (Imperial College) , Kay Wiese (ENS Paris)
+ * 
+ * For any questions/feedback/comments --> b.walter16@imperial.ac.uk
+ * 
+ */
+
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
