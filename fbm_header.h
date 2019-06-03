@@ -1,6 +1,16 @@
 // LIBRARIES
-#include "/Users/benjamin/system/lapack-3.8.0/LAPACKE/include/lapacke.h"
-#include "/Users/benjamin/system/lapack-3.8.0/CBLAS/include/cblas.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
+#include <assert.h>
+#include <unistd.h>
+#include <time.h>
+#include <gsl/gsl_rng.h>
+#include <gsl/gsl_randist.h>
+#include <gsl/gsl_sf.h>
+#include <fftw3.h>
+#include <lapacke.h>
+#include <cblas.h>
 
 // MACROS
 #define MSTEP 1 // How many gridlines for first passage time !CODE isn't adapted for MSTEP > 1 yet!
@@ -82,6 +92,3 @@ void free_QI(triag_matrix**);
 void free_tree(bridge_process**);
 void free_bridge(bridge_process**);
 
-// GLOBALS
-extern double time_GEN_MIDPOINT;
-extern double time_STEP_1, time_STEP_2,time_STEP_3, time_STEP_4, time_STEP_5, time_STEP_6, time_STEP_7;

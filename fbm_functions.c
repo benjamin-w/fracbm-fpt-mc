@@ -1,15 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
-#include <assert.h>
-#include <unistd.h>
-
-#include <time.h>
-#include <gsl/gsl_rng.h>
-#include <gsl/gsl_randist.h>
-#include <gsl/gsl_sf.h>
-
-#include <fftw3.h>
 #include "fbm_header.h"
 
 void initialise( fftw_complex** correlation,  fftw_complex** circulant_eigenvalues,  fftw_complex** rndW,  fftw_complex** fracGN,  double** correlation_exponents, complex_z** randomComplexGaussian, long N, gsl_rng** r,const gsl_rng_type** T, int seed)
@@ -490,54 +478,36 @@ double generate_random_conditional_midpoint( double right_time, double right_val
 	*/
 		
 	/* Matrix inversion core */
-	clock_t t_begin_midpoint = clock();
 	long i;
-	double midtime = (0.5000000L*(right_time + left_time));	
+	double midtime = (0.50*(right_time + left_time));	
 	long number_of_points = (*QI)->size;
 	double *gamma_N_vec = (double*) malloc(number_of_points * sizeof(double));
 	double *g_vec = (double*) malloc(number_of_points * sizeof(double));
 	double hurst = (*QI)->hurst_parameter;
-	clock_t ping, pong;
 	
 	// Step 1, Gamma vector
-	ping = clock();
 	for(i = 0; i < number_of_points; i++)
 	{
 		gamma_N_vec[i] = time_time_correlation(midtime, (*QI)->trajectory_t[i+1], hurst); // No cross correlation with t_0 = 0. \gamma_i = <t_i \tilde{t}> for t_i > 0
 	}
-	pong = clock();
-	time_STEP_1 += ((double) (pong - ping));	
 
 	// Step 2, g-vector. g = Q * \gamma
-	ping = clock();
 	cblas_dspmv(CblasColMajor, CblasUpper, ((int) number_of_points), 1.0, ((*QI)->inv_corr_matrix),  gamma_N_vec, 1, 0, g_vec, 1);
-	pong = clock();
-	time_STEP_2 += ((double) (pong - ping));	
 
 	// Step 3, Compute mean; \mu = g * X
-	ping = clock();
 	mean = cblas_ddot(number_of_points, g_vec, 1, &((*QI)->trajectory_x[1]), 1); // Observe offset by one.
-	pong = clock();
-	time_STEP_3 += ((double) (pong - ping));	
 	
 	// Step 4, Compute variance; \sigma^2 = 2*t - g*x => LOSS OF SIGNIFICANCE !
-	ping = clock();
-	sigma = (2.0000000L * pow(midtime,(2*hurst)));
+	sigma = (2.0 * pow(midtime,(2*hurst)));
 	for(i = 0; i < number_of_points; i++)
 	{
 		sigma -= ( g_vec[i] * gamma_N_vec[i]);
 	}
-	pong = clock();
-	time_STEP_4 += ((double) (pong - ping));	
 
 	// Step 5, Draw normal distributed midpoint
-	ping = clock();
 	midpoint = (mean + gsl_ran_gaussian_ziggurat(r, (sqrt(sigma)))); // the absolute value is only there for loss of significance errors
-	pong = clock();
-	time_STEP_5 += ((double) (pong - ping));	
 
 	// Step 6, Save new points, enlarge matrix and save new inverse correlation matrix
-	ping = clock();
 	double inv_sigma = (1/sigma);
 	// First add sigma^{-2}*g*g^T on top of Q(N)
 	cblas_dspr(CblasColMajor,CblasUpper, ((int) number_of_points), inv_sigma, g_vec, 1, (*QI)->inv_corr_matrix); 
@@ -555,20 +525,12 @@ double generate_random_conditional_midpoint( double right_time, double right_val
 		(*QI)->inv_corr_matrix[i] = -inv_sigma*g_vec[ i - (new_index*(new_index + 1)/2)];
 	}
 	(*QI)->inv_corr_matrix[i] = inv_sigma; // That's the new diagonal entry
-	pong = clock();
-	time_STEP_6 += ((double) (pong - ping));	
 	(*QI)->size = new_index + 1; // Enlarge size.
 	
 	/* Free malloc's */
-	ping = clock();
 	free(gamma_N_vec);
 	free(g_vec);
-	pong = clock();
-	time_STEP_7 += ((double) (pong - ping));	
 
-	clock_t t_end_midpoint = clock();
-	time_GEN_MIDPOINT += ((double)(t_end_midpoint - t_begin_midpoint));
-	
 	return midpoint;
 }
 
