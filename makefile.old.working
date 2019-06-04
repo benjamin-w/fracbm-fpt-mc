@@ -9,19 +9,31 @@
 # Afterwards, they get linked using gfortran
 #
 # For the compilation step, it is necessary to adapt the $INCLUDEPATHS to include the relative paths to 'gsl.h', 'cblas.h', and 'lapacke.h' if they are not already contained in the standard directory /usr/include/ 
-#LAPACKEDIR=#../path to LAPACK installation/lapack-3.8.0
-LAPACKEDIR=/usr/local/opt/lapack
+#LAPACKEDIR = /usr/local/opt/
 #INCLUDEPATHS = -I${LAPACKEDIR}/CBLAS/include -I/${LAPACKEDIR}/LAPACKE/include
+#INCLUDEPATHS = -I${LAPACKEDIR}/openblas/include -I/${LAPACKEDIR}/lapack/include
 
-INCLUDEPATHS = -I/usr/local/opt/openblas/include -I${LAPACKEDIR}/include
+LAPACKEDIR=/usr/local/Cellar/lapack/3.8.0_2
 
-#Hallo, I edited
+INCLUDEPATHS = -I/usr/local/Cellar/openblas/0.3.6_1/include -I${LAPACKEDIR}/include
+
+LIBRARYPATHS = -L${LAPACKEDIR}/lib
+
+
+#instructions from brew
+#For compilers to find openblas you may need to set:
+#  setenv LDFLAGS -L/usr/local/opt/openblas/lib;
+#  setenv CPPFLAGS -I/usr/local/opt/openblas/include;
+#
+#For pkg-config to find openblas you may need to set:
+#  setenv PKG_CONFIG_PATH /usr/local/opt/openblas/lib/pkgconfig;
+
 
 # For the linking step, it is necessary to provide the paths (by writing them into $LIBRARYPATHS) to following libraries
 # fftw3, math, blas, gsl, gslcblas
 # if they are not already stored in /usr/lib or any other standard directory (as they usually are after installing them with a package manager)
 # Furthermore, one needs to link against the Lapack and Lapacke libraries. These are static by default (liblapack.a and liblapacke.a) and are to be found in the $LAPACK installation directory (see README for details). (Comment: If you are interested in linking with dynamical lapack(e)-libraries, you need to compile them first. See http://theoryno3.blogspot.com/2010/12/compiling-lapack-as-shared-library-in.html for more information)
-LIBRARYPATHS = -L${LAPACKEDIR}/lib
+#LIBRARYPATHS = -L${LAPACKEDIR}
 
 
 
@@ -35,6 +47,8 @@ CFLAGS += -Wall
 OBJFILES = fbm_main.o fbm_functions.o
 
 LDFLAGS = -lfftw3 -lm -llapacke -llapack -lblas -lgslcblas -lgsl
+
+#LDFLAGS = -lfftw3 -lm -lblas -lgslcblas -lgsl -llapacke -llapack
 
 TARGET = fbm
 
