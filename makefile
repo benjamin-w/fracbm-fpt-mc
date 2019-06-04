@@ -16,7 +16,7 @@ INCLUDEPATHS = -I${LAPACKEDIR}/CBLAS/include -I/${LAPACKEDIR}/LAPACKE/include
 # fftw3, math, blas, gsl, gslcblas
 # if they are not already stored in /usr/lib or any other standard directory (as they usually are after installing them with a package manager)
 # Furthermore, one needs to link against the Lapack and Lapacke libraries. These are static by default (liblapack.a and liblapacke.a) and are to be found in the $LAPACK installation directory (see README for details). (Comment: If you are interested in linking with dynamical lapack(e)-libraries, you need to compile them first. See http://theoryno3.blogspot.com/2010/12/compiling-lapack-as-shared-library-in.html for more information)
-LIBRARYPATHS = -L${LAPACKEDIR}
+LIBRARYPATHS = -L${LAPACKEDIR}/lib
 
 
 
