@@ -188,7 +188,6 @@ void find_fpt(double* fracbm, double** first_passage_times, double* passage_heig
 	// Find FPT knowing that first passage happens in [0, last_point_index * delta_t]
 	int i;
 	double delta_t = (1/((double) N));
-	double time;
 	int height_counter = 1;
 	
 	triag_matrix *QI;
@@ -205,8 +204,7 @@ void find_fpt(double* fracbm, double** first_passage_times, double* passage_heig
 	while(fpt_found == 0)
 	{
 		i++; // Go to next bridge
-		time = (((double) i)*delta_t);
-		if(i > last_point_index) break; // This was a bug found 17/2, if i>=N, then last box is always wrong.  
+		if(i > last_point_index) break; // if i>=N, then last box is always wrong.  
 
 		// The criterion to split is whether either endpoint lies in the critical zone
 		if ((MAX(fracbm[i],fracbm[i-1])) > (passage_heights[height_counter] - critical_strip))
