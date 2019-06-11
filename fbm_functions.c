@@ -221,22 +221,24 @@ void find_fpt(double* fracbm, double** first_passage_times, double* passage_heig
 		((*first_passage_times)[height_counter]) = 1.0; 
 	}
 
-	bridge_process* point_bridge_old = critical_bridge;
-	bridge_process* point_bridge_new = critical_bridge->previous_root;
-	
-	if(point_bridge_new != NULL){
-		while(point_bridge_new != NULL)
-		{
-			//print_bridge(&point_bridge_old);
-			free_tree(&(point_bridge_old->root_bridge));
-			free_bridge(&(point_bridge_old->root_bridge)); // At the end you need to kill the root.
-			point_bridge_old = point_bridge_new;
-			point_bridge_new = point_bridge_old->previous_root;
+	if(critical_bridge != NULL)
+	{
+		bridge_process* point_bridge_old = critical_bridge;
+		bridge_process* point_bridge_new = critical_bridge->previous_root;
+		
+		if(point_bridge_new != NULL){
+			while(point_bridge_new != NULL)
+			{
+				//print_bridge(&point_bridge_old);
+				free_tree(&(point_bridge_old->root_bridge));
+				free_bridge(&(point_bridge_old->root_bridge)); // At the end you need to kill the root.
+				point_bridge_old = point_bridge_new;
+				point_bridge_new = point_bridge_old->previous_root;
+			}
 		}
-	}
 
-	if(point_bridge_new == NULL){free_tree(&(point_bridge_old->root_bridge));free_bridge(&(point_bridge_old->root_bridge));} 
-	
+		if(point_bridge_new == NULL){free_tree(&(point_bridge_old->root_bridge));free_bridge(&(point_bridge_old->root_bridge));} 
+	}
 	free_QI(&QI); // Free entire structure
 }
 
