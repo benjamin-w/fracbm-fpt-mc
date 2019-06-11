@@ -45,10 +45,10 @@ int main(int argc, char *argv[])
 	{                switch(c)
                         {
 				case 'm':
-					lin_drift = (( double) atof(optarg));
+					lin_drift = ( - ( double) atof(optarg)); // Sign chosen in accordance with paper. 
 					break;
                         	case 'n':
-					frac_drift = (( double) atof(optarg));
+					frac_drift = (- ( double) atof(optarg));
 					break;
                                 case 'h':
                                         hurst = atof(optarg);
