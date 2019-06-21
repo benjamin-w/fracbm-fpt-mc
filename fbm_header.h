@@ -13,14 +13,15 @@
 #include <cblas.h>
 
 // MACROS
-#define MSTEP 1 // How many gridlines for first passage time !CODE isn't adapted for MSTEP > 1 yet!
 #define DD printf("Debug line %d\n", __LINE__) // For debugging
-#define MAX_GENERATION 16 // Maximum generation of search trees
 #define IJ2K(a,b) (a+b*(b+1)/2) // Converts matrix indices
 #define ARRAY_REALLOC_FACTOR 2.0 // Factor for realloc
 #define MIN(a,b) ( (a < b) ? (a) : (b))
 #define MAX(a,b) ( (a > b) ? (a) : (b))
 #define ABS(a) ((a > 0) ? (a): (-a) )
+#define ALLOC(p,n)  (p)=malloc( (n) * sizeof(*(p))); if( (p) == NULL){printf("Allocation of '%s' failed. Terminate. \n", #p); exit(2); } 
+#define FFT_ALLOC(p,n)  (p)=fftw_malloc( (n) * sizeof(*(p))); if( (p) == NULL){printf("Allocation of '%s' failed. Terminate. \n", #p); exit(2); } 
+#define REALLOC(p,n)  (p)=realloc( (p) , (n) * sizeof(*(p))); if( (p) == NULL){printf("Allocation of '%s' failed. Terminate. \n", #p); exit(2); } 
 
 // STRUCT
 // Complex numbers
@@ -65,30 +66,38 @@ typedef struct triag_matrix
 void initialise( fftw_complex** ,  fftw_complex** , fftw_complex** ,  fftw_complex** ,  double** , complex_z** , long N, gsl_rng**, const gsl_rng_type**, int);
 void initialise_trajectory ( double**, long);
 void initialise_inverse_correlation_matrix(double***, long );
-void initialise_observables(double** , double**, double**, double);
 double erfcinv(double);
-void write_correlation_exponents(double**, long, double, double);
-void write_correlation(fftw_complex**, double*, long);
-void write_inverse_correlation_matrix(double ***, long, double);
-void generate_random_vector(complex_z**, fftw_complex**, fftw_complex*,long, double, gsl_rng*);
-void set_to_zero(double**, int);
-void integrate_noise(double**, fftw_complex*, double, double, long, double, int*, double*);
-void find_fpt(double*, double**, double*, long, double, gsl_rng*,double**, double, int);
-void fpt_to_zvar(double**, double*, double*, double);
+void write_correlation_exponents(double*, long, double, double);
+void write_correlation(fftw_complex*, double*, long);
+void write_inverse_correlation_matrix(double **, long, double);
+void generate_random_vector(complex_z*, fftw_complex*, fftw_complex*,long, double);
+void set_to_zero(double*, long);
+void integrate_noise(double*, fftw_complex*, double, double, long, double, int*, double);
+void find_fpt(double*, double*, double, long, double, double**, double, int);
+void fpt_to_zvar(double, double, double);
 void initialise_critical_bridge(bridge_process**, double, double, double, double, double, double, bridge_process*);
-void split_and_search_bridge(bridge_process**, int*, double*, gsl_rng*, double, triag_matrix**);
+void split_and_search_bridge(bridge_process*, int*, double*,  double);
 
-bridge_process* check_this_bridge(bridge_process**, double*, gsl_rng*, double, triag_matrix**);
-bridge_process* split_bridge(bridge_process**, gsl_rng*, triag_matrix**);
-double generate_random_conditional_midpoint(double, double, double, double, gsl_rng*, triag_matrix**);
+bridge_process* check_this_bridge(bridge_process*, double*, double);
+bridge_process* split_bridge(bridge_process*);
+double generate_random_conditional_midpoint(double, double, double, double);
 double crossing_time_of_bridge(bridge_process*);
 double time_time_correlation(double, double, double);
 
-void enlarge_array(triag_matrix**);
-void print_QI(triag_matrix**);
-void print_bridge(bridge_process**);
-void copy_QI(triag_matrix**, double**, int, double, double**, double);
-void free_QI(triag_matrix**);
+void enlarge_QI(void);
+void print_QI(void);
+void print_bridge(bridge_process*);
+void copy_QI(double**, int, double, double*, double);
 void free_tree(bridge_process**);
 void free_bridge(bridge_process**);
 
+// GLOBAL VARIABLES
+extern int max_generation;
+extern double *gamma_N_vec;
+extern double *g_vec;
+
+// GSL RNG
+extern const gsl_rng_type *T;
+extern gsl_rng *r;
+extern int seed;
+extern triag_matrix *QI; //malloc somewhere
