@@ -7,7 +7,7 @@
 #  - Install by running $:'make'
 #  - (Type make clean to delete object files and compilation target)
 #
-# COMMENTARY
+# OUTLINE
 #
 # In a first step, fbm_main.c and fbm_functions.c are compiled using gcc
 # Afterwards, they get linked using gfortran
@@ -23,7 +23,7 @@ INCLUDEPATHS=
 # fftw3, math, blas, gsl, gslcblas, lapack, lapacke
 # if they are not already stored in /usr/lib or any other standard directory (as they usually are after installing them with a package manager)
 #
-# If the libraries are not in the default library directories of $FORTRAN (=gfortran), you need to provide them to it by uncommenting and modifying the line below
+# If the libraries are not in the default library directories of $FORTRAN (=gfortran), you need to provide them by uncommenting and modifying the line below
 # LIBRARYPATHS = -L/..path..to..blas -L/..path.to..lapack(e)
 LIBRARYPATHS=
 #
@@ -31,7 +31,7 @@ LIBRARYPATHS=
 # 
 # Instruction for BREW package manager
 #
-# If you are using Brew as a package manager, install fftw, lapacke, cblas etc. if you don't have it already via
+# If you are using Brew as a package manager, install fftw, lapacke, cblas etc. via
 # brew install fftw
 # brew install lapack
 # brew install openblas
