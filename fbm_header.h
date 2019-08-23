@@ -1,3 +1,7 @@
+/* fracbm-fpt-mc (2019)
+ * Authors: Benjamin Walter, Kay Wiese
+ * Header File */
+
 // LIBRARIES
 #include <stdio.h>
 #include <stdlib.h>
@@ -13,7 +17,6 @@
 #include <cblas.h>
 
 // MACROS
-#define DD printf("Debug line %d\n", __LINE__) // For debugging
 #define IJ2K(a,b) (a+b*(b+1)/2) // Converts matrix indices
 #define ARRAY_REALLOC_FACTOR 2.0 // Factor for realloc
 #define MIN(a,b) ( (a < b) ? (a) : (b))
@@ -55,7 +58,7 @@ typedef struct triag_matrix
 {
 	/* This struct stores a sequence of points X_1, X_2, ... and their inverse correlation matrix. It can be dynamically managed as points are added. Convention for triagonal matrix: column major form and 'upper' triagonal form.*/
 	long size; // This is the size of the matrix itself, that is 0, 1, ..., size - 1 are array indices for both vectors 'trajectory_x' and 'trajectory_t', and 0, 1, ..., size*(size+1)/2 - 1 are indices for upper triagonal matrix. Note that size=N, meanwhile fracbm has N+1 entries. So size is the number of 'free' points, the first one being fixed.
-	long array_length; // This is the length of the array. If size gets to large, realloc. If size == array_length, this is full.
+	long array_length; // This is the length of the array. If size gets to large, realloc. If size == array_length, this array is full.
 	double * inv_corr_matrix; // ( size * ( size + 1) / 2) entries in symmetric inverse correlation matrix of all points already known
 	double * trajectory_x; // All points of the trajectory already known. Length = size + 1 (X_0 = 0 doesn't count, and is neglected in inverse correlation matrix (null mode)). 
 	double * trajectory_t; // And the corresponding time points. Length = size + 1

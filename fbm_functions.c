@@ -1,3 +1,10 @@
+/* fracbm-fpt-mc (2019)
+ *
+ * Authors: Benjamin Walter (Imperial College) , Kay Wiese (ENS Paris)
+ * 
+ */
+
+
 #include "fbm_header.h"
 
 int max_generation;
@@ -23,7 +30,7 @@ void initialise( fftw_complex** correlation,  fftw_complex** circulant_eigenvalu
         *r = gsl_rng_alloc (*T);
         if(seed==-1) seed = ((int) (((int) clock() ) % 100000));
         gsl_rng_set(*r, seed);
-        printf("# SEED %i\n",seed);
+        printf("# RNG Seed %i\n",seed);
 }
 
 void initialise_trajectory(  double ** fracbm, long N)
@@ -34,8 +41,7 @@ void initialise_trajectory(  double ** fracbm, long N)
 
 void initialise_inverse_correlation_matrix(double*** QInverseCorrelation, long N )
 {
-	// This is inverse correlation matrix of X_1...X_N with X_0 = 0 fixed.
-	
+	// This is inverse correlation matrix of X_1...X_N with X_0 = 0 fixed.	
 	long i;
 	ALLOC( *QInverseCorrelation, N);
 	for(i = 0; i < N; i++)
@@ -81,9 +87,9 @@ void write_correlation(fftw_complex* correlation, double* correlation_exponents,
 
 void write_inverse_correlation_matrix(double** Q, long N, double hurst)
 {
-	// This is a catalogue of N different correlation matrices where the n.th correlation matrix corresponds to the one of the first N points fixed.
+	// This is a catalogue of N different correlation matrices where the n.th correlation matrix corresponds to the one of the first N points of a fBM fixed.
 
-	int NN = ((int)N); // ! Long is being casted int ! but just because LAPACKE needs to deal with it.
+	int NN = ((int)N); // ! Long is being casted int ! Because LAPACKE needs to deal with it.
 	double delta_t = (1/ ((double) N));
 	
 	int size; // This is the size of the matrix going to go from 1 to N
@@ -154,7 +160,7 @@ void integrate_noise(double* fracbm, fftw_complex* fracGN,double lin_drift, doub
 	int i;
 	for(i = 1; i <= N; i++)
 	{
-		fracbm[i] = (fracbm[i-1] + fracGN[i-1][0] + (lin_drift + frac_drift*(pow((((double)i)-0.5)*delta_t, (2*hurst - 1.0))))*delta_t); // Ito integration, fractional drift is evaluated at midpoint --> Check for consequences
+		fracbm[i] = (fracbm[i-1] + fracGN[i-1][0] + (lin_drift + frac_drift*(pow((((double)i)-0.5)*delta_t, (2*hurst - 1.0))))*delta_t); // Stochastic integration, fractional drift is evaluated at midpoint
 		if( fracbm[i] > passage_height)
 		{
 			if(i < *last_point_index){*last_point_index = i;}
@@ -172,18 +178,17 @@ void find_fpt(double* fracbm, double* first_passage_times, double passage_height
 	copy_QI(QCatalogue, last_point_index, hurst, fracbm, delta_t); // Here a local copy of QI is created that is conditioned on last_point_index
 
 	int fpt_found = 0;
-	double critical_strip = (erfcinv(2*epsilon)*(sqrt( ( (4.0/pow(2.0,2*hurst)) - 1)))*pow(delta_t, hurst)); // See currentnotes.pdf for calculation
+	double critical_strip = (erfcinv(2*epsilon)*(sqrt( ( (4.0/pow(2.0,2*hurst)) - 1)))*pow(delta_t, hurst)); 
 
 	bridge_process *critical_bridge;
 	critical_bridge = NULL;
 
-	// MISSING: for loop over all height_counters
 	/* The tree algorithm */
 	i = 0;
 	while(fpt_found == 0)
 	{
 		i++; // Go to next bridge
-		if(i > last_point_index) break; // if i>=N, then last box is always wrong.  
+		if(i > last_point_index) break; // stop when path has passed barrier already  
 
 		// The criterion to split is whether either endpoint lies in the critical zone
 		if ((MAX(fracbm[i],fracbm[i-1])) > (passage_height - critical_strip))
@@ -200,6 +205,7 @@ void find_fpt(double* fracbm, double* first_passage_times, double passage_height
 		*first_passage_times = 1.0; 
 	}
 
+	// This sub-routine deletes all trees after finishing
 	if(critical_bridge != NULL)
 	{
 		bridge_process* point_bridge_old = critical_bridge;
@@ -208,9 +214,8 @@ void find_fpt(double* fracbm, double* first_passage_times, double passage_height
 		if(point_bridge_new != NULL){
 			while(point_bridge_new != NULL)
 			{
-				//print_bridge(&point_bridge_old);
 				free_tree(&(point_bridge_old->root_bridge));
-				free_bridge(&(point_bridge_old->root_bridge)); // At the end you need to kill the root.
+				free_bridge(&(point_bridge_old->root_bridge)); 
 				point_bridge_old = point_bridge_new;
 				point_bridge_new = point_bridge_old->previous_root;
 			}
@@ -322,7 +327,7 @@ bridge_process* check_this_bridge(bridge_process* incoming_bridge, double* fpt_b
 				{
 					// 0001*
 					//outgoing_bridge = (*incoming_bridge)->parental_bridge;
-					return NULL; // Yes, because if a FPT was found in the smallest bridge possible, it is not going to be improved. If you delete this line, in fact it will get worse if a parent had no right child and its left time is good enough. Long time undetected "bug".
+					return NULL; // if a FPT was found in the smallest bridge possible, it is not going to be improved.
 				}
 			}
 			else
@@ -364,7 +369,7 @@ bridge_process* split_bridge(bridge_process* parent_bridge)
 	* COMMENTARY
 	* This function recevies a bridge process from check_this_bridge with the task to return the left or right subbridge spanning the midpoint with either of the endpoints and with full information (as required by the struct bridge_process in fbm_header.h)
 	* If the left child has not been generated yet, a midpoint has to be drawn according to a Gaussian distribution known from fBM bridges and conditioned on all previously known points
-	(* If the left child already exists, and a right child is to be generated, it simply inherits the right endpoint of the left child as its left endpoint, now drawing has to be done.
+	(* If the left child already exists, and a right child is to be generated, it simply inherits the right endpoint of the left child as its left endpoint, no drawing has to be done.
 	*/
 
 	bridge_process *sub_process;
@@ -469,7 +474,7 @@ double generate_random_conditional_midpoint( double right_time, double right_val
 		sigma -= ( g_vec[i] * gamma_N_vec[i]);
 	}
 	// Sanity check: Is sigma affected by floating point inaccuracies?
-	if(sigma < 0){printf("Matrix inversion limited by floating point precision. Lower grid resolution.\n"); exit(2);}
+	if(sigma < 0){printf("Matrix inversion limited by floating point precision. Lower grid resolution.\n"); exit(2);} // This is a very brute way of checking -- only triggers, when sigma^2 < 0, sure sign for numerical imprecision. Should be handled with care.
 
 	// Step 5, Draw normal distributed midpoint
 	midpoint = (mean + gsl_ran_gaussian_ziggurat(r, (sqrt(sigma)))); 
@@ -510,6 +515,7 @@ double crossing_time_of_bridge(bridge_process* process)
 
 double time_time_correlation(double ti, double tj, double hurst)
 {
+	// Correlation of fractional Brownian Motion
 	if(hurst == 0.5){return (2*MIN(ti,tj));}
 	else{return ( pow(fabs(ti),2*hurst) + pow(fabs(tj),2*hurst) - pow(fabs(ti-tj),2*hurst));}
 }
@@ -524,7 +530,25 @@ void enlarge_QI()
 	QI->array_length = new_size;
 }
 
-// Some useful functions for debugging. Not normally used
+void free_tree(bridge_process** bridge)
+{
+	// Frees a "tree", so a nested sequence of generated midpoints
+	int nodecount = ((*bridge)->root_bridge)->stack_top;
+	bridge_process *root=(*bridge)->root_bridge;
+	int i;
+	for(i = 1; i < nodecount; i++)
+	{
+		free_bridge(&(root->pointer_stack[i]));
+	}
+}
+
+void free_bridge(bridge_process** bridge)
+{
+	free((*bridge)->pointer_stack);
+	free(*bridge);
+}
+// DEBUG FUNCTIONS
+// Below, there are some useful functions for debugging. Not normally used
 
 void print_QI()
 {
@@ -589,20 +613,4 @@ void copy_QI(double **Q, int last_point_index, double hurst, double* fracbm, dou
 
 
 
-void free_tree(bridge_process** bridge)
-{
-	// Frees a "tree", so a nested sequence of generated midpoints
-	int nodecount = ((*bridge)->root_bridge)->stack_top;
-	bridge_process *root=(*bridge)->root_bridge;
-	int i;
-	for(i = 1; i < nodecount; i++)
-	{
-		free_bridge(&(root->pointer_stack[i]));
-	}
-}
 
-void free_bridge(bridge_process** bridge)
-{
-	free((*bridge)->pointer_stack);
-	free(*bridge);
-}

@@ -1,15 +1,18 @@
-/* This code simulates a fractional Brownian Motion on the interval [0,1] and finds the first passage time.
+/* fracbm-fpt-mc (2019)
+ *
+ * This code simulates a fractional Brownian Motion with linear and non=linear drift  on the interval [0,1] and finds the first passage time.
  * 
  * Authors: Benjamin Walter (Imperial College) , Kay Wiese (ENS Paris)
  * 
- * For any questions/feedback/comments --> b.walter16@imperial.ac.uk
- * 
+ * Questions, feedback and comments are appreciated. Please contact 'b.walter16@imperial.ac.uk'
  */
 
 #include "fbm_header.h"
 
+// Global variable
 int max_generation;
 triag_matrix *QI;
+
 // GSL RNG
 const gsl_rng_type *T;
 gsl_rng *r;
@@ -20,36 +23,33 @@ int seed;
 int main(int argc, char *argv[])
 {
 	setlinebuf(stdout);
+
 	// VARIABLES
-	
-	// physics
 	// Default values, overwritten by getopt
 	double frac_drift = 0.0;
 	double lin_drift = 0.0;
 	double hurst = 0.5; 	// Hurst parameter 0 < h < 1
 	int g =8;		// 2^g is number of points
-	max_generation = 8;
-	
-	// experiment
-	int iteration = 10000;	// Size of ensemble
+	max_generation = 8;	// Number of maximum number of additional bisections. N_eff = 2^(g+max_generation).
 	double epsilon = 1e-9; // Tolerance probability with which a midpoint might be falsenegative, i.e. traverse the boundary
+	
+	// Simulation parametre
+	int iteration = 10000;	// Size of ensemble
 	int iter;
 	
-
-	
 	// observables
-	double passage_heights = 0.1;
+	double passage_heights = 0.1; // Height of absorbing barrier (needs to be > 0).
 	double first_passage_times = 0.0;
-	int seed = -1;
+	int seed = -1; // RNG seed
 
-	// ARGUMENTS
+	// input
 	opterr = 0;
 	int c = 0;
         while( (c = getopt (argc, argv, "h:g:G:S:I:m:n:E:") ) != -1)
 	{                switch(c)
                         {
 				case 'm':
-					lin_drift = ( - ( double) atof(optarg)); // Sign chosen in accordance with paper. 
+					lin_drift = ( - ( double) atof(optarg)); 
 					break;
                         	case 'n':
 					frac_drift = (- ( double) atof(optarg));
@@ -76,14 +76,11 @@ int main(int argc, char *argv[])
                         }
 	}// getopt ends
 
-	//int i; // Index
 	long N = ((long) pow(2,g));
 	double invN = 1/(( double) N);
 	double sigma = 1.0;//sqrt(2.0);
 
-	printf("# FBM Simulator, Hurst: %g, N: %ld \n", hurst, N);	
-	
-
+	printf("# FRACBM-FPT-MC (2019)\n# Simulation Parameters\n# Hurst parameter: %g, Subgridsize: %ld \n", hurst, N);	
 	fftw_complex *correlation, *circulant_eigenvalues, *rndW, *fracGN;
        	double *correlation_exponents, *fracbm, **QInverseCorrelationCatalogue;
 	complex_z *randomComplexGaussian;
@@ -112,7 +109,7 @@ int main(int argc, char *argv[])
 	
 	
 	// Print out header
-	printf("# FBM Simulator\n# Bridge with Matrix inversion\n# Hurst parameter: %g\n# Linear drift (mu): %g\n#Fractional drift (nu): %g\n# Barrier height at %g\n# N: %ld\n# MAX generation: %i \n", hurst, lin_drift, frac_drift, passage_heights, N, max_generation);	
+	printf("# Linear drift (mu): %g\n# Fractional drift (nu): %g\n# Barrier height at %g\n# Effective system size = 2^(%i) \n", lin_drift, frac_drift, passage_heights, (g+max_generation));	
 	
 	// Write correlation of noise
 	write_correlation_exponents(correlation_exponents, N, invN, hurst);
