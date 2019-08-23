@@ -1,0 +1,8 @@
+FRACBM-FPT-MC
+(2019)
+
+For installation, we recommend the makefile included. Further explanations are provided in the makefile
+
+For documentation refer to 
+
+B.Walter, K. J. Wiese. Sampling first-passage times of fractional Brownian Motion using adaptive bisections. In preparation
