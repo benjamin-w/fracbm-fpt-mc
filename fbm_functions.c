@@ -7,10 +7,13 @@
 
 #include "fbm_header.h"
 
+// Globals recall
 int max_generation;
 double *gamma_N_vec;
 double *g_vec;
 triag_matrix *QI;
+double lin_drift, frac_drift;
+double *xfracbm;
 
 void initialise( fftw_complex** correlation,  fftw_complex** circulant_eigenvalues,  fftw_complex** rndW,  fftw_complex** fracGN,  double** correlation_exponents, complex_z** randomComplexGaussian, long N, gsl_rng** r,const gsl_rng_type** T, int seed)
 {
@@ -36,7 +39,8 @@ void initialise( fftw_complex** correlation,  fftw_complex** circulant_eigenvalu
 void initialise_trajectory(  double ** fracbm, long N)
 {
 	// N increments give N+1 points
-	ALLOC( *fracbm, N+1);
+	ALLOC( xfracbm, N+1); // X_t
+	ALLOC( *fracbm, N+1); // X_t + drift terms
 }
 
 void initialise_inverse_correlation_matrix(double*** QInverseCorrelation, long N )
@@ -153,14 +157,20 @@ void set_to_zero(double* pointer, long length)
 void integrate_noise(double* fracbm, fftw_complex* fracGN,double lin_drift, double frac_drift, long N, double hurst, int *last_point_index, double passage_height)
 {	
 	// Find the first point to jump over the barrier (if exists). Then throw away all points behind. Take the appropiate inverse matrix and pass it on.
-	fracbm[0] = 0.0;
 	double delta_t = (1/((double) N));
 	*last_point_index = ((int) N);
-
 	int i;
+
+	// Integrate up fractional gaussian noise for fbm trajectory
+	// Add up linear and fractional drift terms
+	double time;
+	xfracbm[0] = 0.0;
+	fracbm[0] = 0.0;
 	for(i = 1; i <= N; i++)
 	{
-		fracbm[i] = (fracbm[i-1] + fracGN[i-1][0] + (lin_drift + frac_drift*(pow((((double)i)-0.5)*delta_t, (2*hurst - 1.0))))*delta_t); // Stochastic integration, fractional drift is evaluated at midpoint
+		time = (i*delta_t);
+		xfracbm[i] = xfracbm[i-1] + fracGN[i-1][0];
+		fracbm[i] = (xfracbm[i] + (lin_drift * time) + frac_drift*pow(time, 2*hurst));
 		if( fracbm[i] > passage_height)
 		{
 			if(i < *last_point_index){*last_point_index = i;}
@@ -191,7 +201,7 @@ void find_fpt(double* fracbm, double* first_passage_times, double passage_height
 		if(i > last_point_index) break; // stop when path has passed barrier already  
 
 		// The criterion to split is whether either endpoint lies in the critical zone
-		if ((MAX(fracbm[i],fracbm[i-1])) > (passage_height - critical_strip))
+		/* Z */if ((MAX(fracbm[i],fracbm[i-1])) > (passage_height - critical_strip))
 		{
 			// Bridge is critical
 			initialise_critical_bridge(&critical_bridge, ((double) i*delta_t), fracbm[i], ((double)(i-1)*delta_t), fracbm[i-1],  passage_height, critical_strip, critical_bridge); 			
@@ -498,7 +508,7 @@ double generate_random_conditional_midpoint( double right_time, double right_val
 	QI->inv_corr_matrix[i] = inv_sigma; // That's the new diagonal entry
 	QI->size = new_index + 1; // Enlarge size.
 
-	return midpoint;
+	return (midpoint + lin_drift*midtime + frac_drift*pow(midtime, 2*hurst));
 }
 
 double crossing_time_of_bridge(bridge_process* process)
@@ -508,7 +518,7 @@ double crossing_time_of_bridge(bridge_process* process)
 	// Sanity check
 	if( process->crossing_threshold == 1)
 	{	
-		fpt = ( (process->left_time) + (process->right_time - process->left_time)/(process->right_value - process->left_value)*(process->threshold - process->left_value));
+		fpt = ( (process->left_time) + (process->right_time - process->left_time)*(((process->threshold - process->left_value)/(process->right_value - process->left_value))));
 	}
 	return fpt;
 }
@@ -593,16 +603,17 @@ void print_bridge(bridge_process* bridge)
 	printf(" +++++++++++ \n");
 }
 
-void copy_QI(double **Q, int last_point_index, double hurst, double* fracbm, double delta_t)
+void copy_QI(double **Q, int last_point_index, double hurst, double* zfracbm, double delta_t)
 {
 	int i,j;
 	QI->size = last_point_index;
-	
+	double time;
 	QI->trajectory_x[0] = 0.0;
 	QI->trajectory_t[0] = 0.0;
 	for(i = 0; i < (QI->size) ; i++)
         {
-		QI->trajectory_x[i+1] = fracbm[i+1];
+		time = ((i+1)*delta_t);
+		QI->trajectory_x[i+1] = (zfracbm[i+1] - lin_drift*time - frac_drift*pow(time, 2*hurst));
 		QI->trajectory_t[i+1] = ((i+1)*delta_t);
 		for(j = i; j < (QI->size) ; j++)
 		{

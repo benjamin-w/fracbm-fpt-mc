@@ -90,7 +90,7 @@ double time_time_correlation(double, double, double);
 void enlarge_QI(void);
 void print_QI(void);
 void print_bridge(bridge_process*);
-void copy_QI(double**, int, double, double*, double);
+void copy_QI(double**, int, double, double*, double );
 void free_tree(bridge_process**);
 void free_bridge(bridge_process**);
 
@@ -98,6 +98,8 @@ void free_bridge(bridge_process**);
 extern int max_generation;
 extern double *gamma_N_vec;
 extern double *g_vec;
+extern double lin_drift, frac_drift; // Additional linear and fractional drift constants: Z_t = X_t + lin_drift * t + frac_drift * t^(2*hurst). FPT is searched for Z_t.
+extern double *xfracbm; // The fBM trajectory with *no* drift is 'xfracbm'. The process with drift is labelled 'fracbm'. 
 
 // GSL RNG
 extern const gsl_rng_type *T;

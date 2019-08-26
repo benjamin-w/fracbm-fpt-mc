@@ -12,6 +12,7 @@
 // Global variable
 int max_generation;
 triag_matrix *QI;
+double lin_drift, frac_drift;
 
 // GSL RNG
 const gsl_rng_type *T;
@@ -26,8 +27,8 @@ int main(int argc, char *argv[])
 
 	// VARIABLES
 	// Default values, overwritten by getopt
-	double frac_drift = 0.0;
-	double lin_drift = 0.0;
+	frac_drift = 0.0;
+	lin_drift = 0.0;
 	double hurst = 0.5; 	// Hurst parameter 0 < h < 1
 	int g =8;		// 2^g is number of points
 	max_generation = 8;	// Number of maximum number of additional bisections. N_eff = 2^(g+max_generation).
@@ -141,7 +142,7 @@ int main(int argc, char *argv[])
 
 		// Convert first passage times into Laplace variables
 		fpt_to_zvar(passage_heights, first_passage_times, hurst);
-		
+
 	}// End iteration
 
 	return 0;
