@@ -1,8 +1,24 @@
 FRACBM-FPT-MC
 (2019)
 
-For installation, we recommend the makefile included. Further explanations are provided in the makefile
+This C code is a Monte Carlo sampler to generate first passage times of a fractional Brownian Motion fast and with high numerical accuracy. Let X_t be a fractional Brownian Motion of Hurst parameter H, \mu linear and \nu fractional drift coefficients, then define
 
-For documentation refer to 
+		Z_t = X_t + \mu * t + \nu * t ^ ( 2 H)
 
-B.Walter, K. J. Wiese. Sampling first-passage times of fractional Brownian Motion using adaptive bisections. In preparation
+to be the fBM with drift with Z_0 = 0. For m > 0 given, this code finds the first time for which Z_t >= m. The underlying algorithm, adaptive bisections, is explained in 
+
+B.Walter, K. J. Wiese. Sampling first-passage times of fractional Brownian Motion using adaptive bisections. 2019.
+
+To compile and run the code, we recommend the makefile included. First, open the makefile. As detailed in the comments of the makefile, it is necessary to provide the paths to the library and header files of the libraries used in the code (which may need to be installed first). Once this is done, type
+
+'make'
+
+and execute with
+
+'./fbm -I [Number of iterations] -h [Hurst parameter] -m [\mu] -n [\nu] -S [RNG Seed] -g [Subgrid size] -G [Additional maximal bisection levels]'
+
+The effective system size of the discretisation then is 2^(g + G).
+
+For further information, please refer to the paper mentioned above.
+
+This code is experimental, we highly appreciate any feedback, comments, or question which you can email to b.walter16@imperial.ac.uk.
